@@ -1,0 +1,8 @@
+startup --host_jvm_args=-XX:+UseZGC
+
+common --enable_platform_specific_config
+
+common -c opt
+common:release --features=thin_lto
+common --@rules_rust//rust/settings:experimental_use_allocator_libraries_with_mangled_symbols
+build --@rules_rust//rust/toolchain/channel=nightly

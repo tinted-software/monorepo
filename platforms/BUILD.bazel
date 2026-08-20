@@ -1,0 +1,17 @@
+package(default_visibility = ["//visibility:public"])
+
+# vmapple is XNU's "SOC_IS_VIRTUALIZED" arm64 board config used to run under
+# Apple's own hypervisor (Virtualization.framework / macOS VMs on Apple
+# Silicon); this is also the eventual target for real arm64 boards such as
+# the "spotify car thing" once board-specific pexpert/platform support is
+# added. Mach-O arch/ABI is identical to macos_aarch64, so we alias the
+# hermetic-llvm platform directly; a distinct platform is kept so board
+# selection (currently baked into the xnu BUILD's -DARM64_BOARD_CONFIG_VMAPPLE)
+# has a stable target to grow constraint_values on.
+platform(
+    name = "arm64_vmapple",
+    constraint_values = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+)

@@ -1,0 +1,13 @@
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_binary(
+    name = "migcom",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2024",
+    deps = [
+        "@crates//:annotate-snippets",
+        "@crates//:winnow",
+    ],
+)

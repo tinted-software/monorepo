@@ -1,0 +1,6 @@
+exports_files([
+    "resolve_options.py",
+    "gen_assym_extract.sh",
+    "TrustCache.patch",
+    "run_mig.sh",
+])

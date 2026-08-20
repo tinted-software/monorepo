@@ -1,0 +1,30 @@
+[package]
+name = "angle_wgpu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "OpenGL ES 1.1/2.0 and EGL implemented on wgpu, with a C ABI."
+include = [
+    "src/**/*",
+    "cbindgen.toml",
+    "include/**/*",
+    "LICENSE.txt",
+]
+
+[lib]
+name = "angle_wgpu"
+crate-type = ["rlib", "staticlib"]
+
+[dependencies]
+bytemuck.workspace = true
+glam.workspace = true
+log.workspace = true
+parking_lot.workspace = true
+raw-window-handle.workspace = true
+wgpu.workspace = true
+winit.workspace = true
+zune-core.workspace = true
+zune-png.workspace = true
+
+[dev-dependencies]
+cbindgen.workspace = true

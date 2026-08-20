@@ -31,20 +31,8 @@ echo "==> Building OpenDarwin EL2 hypervisor for Meson G12A..."
 hv_elf="$root/hv/target/aarch64-unknown-none/release/darwin-hv"
 echo "==> ELF: $hv_elf"
 
-objcopy_bin=""
-for cand in llvm-objcopy aarch64-linux-gnu-objcopy objcopy; do
-    if command -v "$cand" >/dev/null 2>&1; then
-        objcopy_bin="$cand"
-        break
-    fi
-done
-if [ -z "$objcopy_bin" ]; then
-    echo "ERROR: no suitable objcopy tool found (need llvm-objcopy, aarch64-linux-gnu-objcopy, or objcopy)" >&2
-    exit 1
-fi
-
-echo "==> Extracting raw ARM64 image with $objcopy_bin..."
-"$objcopy_bin" -O binary "$hv_elf" "$out_dir/hv.bin"
+echo "==> Extracting raw ARM64 image..."
+llvm-objcopy -O binary "$hv_elf" "$out_dir/hv.bin"
 echo "==> Raw image: $out_dir/hv.bin ($(stat -f%z "$out_dir/hv.bin" 2>/dev/null || stat -c%s "$out_dir/hv.bin") bytes)"
 
 echo "==> Building amlogic-boot host tool..."

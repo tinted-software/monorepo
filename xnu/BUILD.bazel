@@ -1,0 +1,591 @@
+load("@bazel_lib//lib:transitions.bzl", "platform_transition_filegroup")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load(
+    "@xnu//:xnu_srcs.bzl",
+    "BSD_C_SRCS",
+    "BSD_DEFINES",
+    "BSD_S_SRCS",
+    "IOKIT_C_SRCS",
+    "IOKIT_DEFINES",
+    "IOKIT_S_SRCS",
+    "LIBKERN_C_SRCS",
+    "LIBKERN_DEFINES",
+    "LIBKERN_S_SRCS",
+    "LIBSA_C_SRCS",
+    "LIBSA_DEFINES",
+    "LIBSA_S_SRCS",
+    "OSFMK_C_SRCS",
+    "OSFMK_DEFINES",
+    "OSFMK_S_SRCS",
+    "PEXPERT_C_SRCS",
+    "PEXPERT_DEFINES",
+    "PEXPERT_S_SRCS",
+    "SAN_C_SRCS",
+    "SAN_DEFINES",
+    "SAN_S_SRCS",
+    "SECURITY_C_SRCS",
+    "SECURITY_DEFINES",
+    "SECURITY_S_SRCS",
+)
+load(":gen_assym.bzl", "gen_assym")
+load(":mig.bzl", "xnu_files", "xnu_mig_stubs")
+
+package(default_visibility = ["//visibility:public"])
+
+xnu_mig_stubs()
+
+cc_library(
+    name = "mig_hdrs",
+    hdrs = [":mig_headers"],
+    includes = ["mig"],
+)
+
+_ARM64_VMAPPLE_COPTS = [
+    "-DKERNEL",
+    "-DKERNEL_PRIVATE",
+    "-DXNU_KERNEL_PRIVATE",
+    "-DPRIVATE",
+    "-DAPPLE",
+    "-DAPPLE_ARM64_ARCH_FAMILY=1",
+    "-DARM64_BOARD_CONFIG_VMAPPLE=1",
+    "-DSOC_IS_VIRTUALIZED=1",
+    "-D__arm64__=1",
+    "-D__ARM64_ARCH_8_32__=0",
+    "-D__builtin_xnu_type_summary(x)=0",
+    "-D__builtin_xnu_type_signature(x)=\"\"",
+    "-D__builtin_xnu_types_compatible(a,b)=1",
+    "-fno-builtin",
+    "-fno-common",
+    "-fno-strict-aliasing",
+    "-fno-stack-protector",
+    "-mkernel",
+    "-ffreestanding",
+    "-Wno-error",
+    "-nostdlibinc",
+    "-march=armv8-a+crypto+sha2+sha3",
+]
+
+_ASM_COPTS = [
+    "-D__ASSEMBLER__",
+    "-DASSEMBLER",
+]
+
+gen_assym(
+    name = "assym_osfmk_raw",
+    src = "@xnu//:osfmk/arm64/genassym.c",
+    out = "generated/osfmk/assym.s",
+    hdrs = [
+        ":mig_headers",
+        "@xnu//:bsd_headers",
+        "@xnu//:config_headers_bsd",
+        "@xnu//:config_headers_iokit",
+        "@xnu//:config_headers_libkern",
+        "@xnu//:config_headers_libsa",
+        "@xnu//:config_headers_osfmk",
+        "@xnu//:config_headers_pexpert",
+        "@xnu//:config_headers_san",
+        "@xnu//:config_headers_security",
+        "@xnu//:external_headers",
+        "@xnu//:iokit_headers",
+        "@xnu//:libkern_headers",
+        "@xnu//:libsa_headers",
+        "@xnu//:osfmk_headers",
+        "@xnu//:pexpert_headers",
+        "@xnu//:san_export_headers",
+        "@xnu//:san_headers",
+        "@xnu//:security_headers",
+    ],
+    copts = _ARM64_VMAPPLE_COPTS + OSFMK_DEFINES + [
+        "-DMACH_KERNEL_PRIVATE",
+        "-DMACH_KERNEL",
+        "-include",
+        "meta_features.h",
+    ],
+    includes = [
+        ".",
+        "EXTERNAL_HEADERS",
+        "osfmk",
+        "bsd",
+        "generated/osfmk",
+        "generated/bsd",
+        "generated/pexpert",
+        "generated/iokit",
+        "generated/libkern",
+        "generated/libsa",
+        "generated/san",
+        "generated/security",
+        "iokit",
+        "libkern",
+        "libsa",
+        "osfmk/libsa",
+        "pexpert",
+        "san",
+        "san_export",
+        "security",
+    ],
+    tags = ["manual"],
+)
+
+# --- osfmk ---
+
+cc_library(
+    name = "osfmk_arm64_vmapple_lib",
+    srcs = xnu_files(OSFMK_C_SRCS) + [":mig_srcs"],
+    hdrs = [":mig_headers"],
+    copts = _ARM64_VMAPPLE_COPTS + OSFMK_DEFINES + [
+        "-DMACH_KERNEL_PRIVATE",
+        "-DMACH_KERNEL",
+        "-include",
+        "meta_features.h",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    textual_hdrs = [":assym_osfmk_raw"],
+    deps = [
+        ":mig_hdrs",
+        "@xnu//:kernel_headers",
+    ],
+)
+
+cc_library(
+    name = "osfmk_arm64_vmapple_asm",
+    srcs = xnu_files(OSFMK_S_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + OSFMK_DEFINES + _ASM_COPTS + [
+        "-DMACH_KERNEL_PRIVATE",
+        "-DMACH_KERNEL",
+        "-include",
+        "meta_features.h",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        "@xnu//:kernel_headers",
+    ],
+    alwayslink = True,
+)
+
+# --- bsd ---
+
+cc_library(
+    name = "bsd_arm64_vmapple_lib",
+    srcs = xnu_files(BSD_C_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + BSD_DEFINES + [
+        "-DBSD_KERNEL_PRIVATE",
+        "-DBSD_BUILD",
+        "-include",
+        "meta_features.h",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        ":osfmk_arm64_vmapple_lib",
+        "@xnu//:kernel_headers",
+    ],
+)
+
+cc_library(
+    name = "bsd_arm64_vmapple_asm",
+    srcs = xnu_files(BSD_S_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + BSD_DEFINES + _ASM_COPTS + [
+        "-DBSD_KERNEL_PRIVATE",
+        "-DBSD_BUILD",
+        "-include",
+        "meta_features.h",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        "@xnu//:kernel_headers",
+    ],
+    alwayslink = True,
+)
+
+# --- pexpert ---
+
+cc_library(
+    name = "pexpert_arm64_vmapple_lib",
+    srcs = xnu_files(PEXPERT_C_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + PEXPERT_DEFINES,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        ":osfmk_arm64_vmapple_lib",
+        "@xnu//:kernel_headers",
+    ],
+)
+
+cc_library(
+    name = "pexpert_arm64_vmapple_asm",
+    srcs = xnu_files(PEXPERT_S_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + PEXPERT_DEFINES + _ASM_COPTS,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        "@xnu//:kernel_headers",
+    ],
+    alwayslink = True,
+)
+
+# --- iokit ---
+
+cc_library(
+    name = "iokit_arm64_vmapple_lib",
+    srcs = xnu_files(IOKIT_C_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + IOKIT_DEFINES + [
+        "-DIOKITBSDHANDLERS",
+        "-include",
+        "meta_features.h",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        ":osfmk_arm64_vmapple_lib",
+        "@xnu//:kernel_headers",
+    ],
+)
+
+cc_library(
+    name = "iokit_arm64_vmapple_asm",
+    srcs = xnu_files(IOKIT_S_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + IOKIT_DEFINES + _ASM_COPTS,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        "@xnu//:kernel_headers",
+    ],
+    alwayslink = True,
+)
+
+# --- libkern ---
+
+cc_library(
+    name = "libkern_arm64_vmapple_lib",
+    srcs = xnu_files(LIBKERN_C_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + LIBKERN_DEFINES + [
+        "-DLIBKERN_KERNEL_PRIVATE",
+        "-include",
+        "meta_features.h",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        ":osfmk_arm64_vmapple_lib",
+        "@xnu//:kernel_headers",
+    ],
+)
+
+cc_library(
+    name = "libkern_arm64_vmapple_asm",
+    srcs = xnu_files(LIBKERN_S_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + LIBKERN_DEFINES + _ASM_COPTS,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        "@xnu//:kernel_headers",
+    ],
+    alwayslink = True,
+)
+
+# --- libsa ---
+
+cc_library(
+    name = "libsa_arm64_vmapple_lib",
+    srcs = xnu_files(LIBSA_C_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + LIBSA_DEFINES + [
+        "-include",
+        "meta_features.h",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        ":osfmk_arm64_vmapple_lib",
+        "@xnu//:kernel_headers",
+    ],
+)
+
+cc_library(
+    name = "libsa_arm64_vmapple_asm",
+    srcs = xnu_files(LIBSA_S_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + LIBSA_DEFINES + _ASM_COPTS,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        "@xnu//:kernel_headers",
+    ],
+    alwayslink = True,
+)
+
+# --- san ---
+
+cc_library(
+    name = "san_arm64_vmapple_lib",
+    srcs = xnu_files(SAN_C_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + SAN_DEFINES + [
+        "-include",
+        "meta_features.h",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        ":osfmk_arm64_vmapple_lib",
+        "@xnu//:kernel_headers",
+    ],
+)
+
+cc_library(
+    name = "san_arm64_vmapple_asm",
+    srcs = xnu_files(SAN_S_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + SAN_DEFINES + _ASM_COPTS,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        "@xnu//:kernel_headers",
+    ],
+    alwayslink = True,
+)
+
+# --- security ---
+
+cc_library(
+    name = "security_arm64_vmapple_lib",
+    srcs = xnu_files(SECURITY_C_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + SECURITY_DEFINES + [
+        "-DCONFIG_MACF",
+        "-include",
+        "meta_features.h",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        ":osfmk_arm64_vmapple_lib",
+        "@xnu//:kernel_headers",
+    ],
+)
+
+cc_library(
+    name = "security_arm64_vmapple_asm",
+    srcs = xnu_files(SECURITY_S_SRCS),
+    copts = _ARM64_VMAPPLE_COPTS + SECURITY_DEFINES + _ASM_COPTS,
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":mig_hdrs",
+        "@xnu//:kernel_headers",
+    ],
+    alwayslink = True,
+)
+
+# --- Combined library aggregating all XNU subsystems ---
+
+cc_library(
+    name = "xnu_arm64_vmapple_lib",
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":bsd_arm64_vmapple_asm",
+        ":bsd_arm64_vmapple_lib",
+        ":iokit_arm64_vmapple_asm",
+        ":iokit_arm64_vmapple_lib",
+        ":libkern_arm64_vmapple_asm",
+        ":libkern_arm64_vmapple_lib",
+        ":libsa_arm64_vmapple_asm",
+        ":libsa_arm64_vmapple_lib",
+        ":osfmk_arm64_vmapple_asm",
+        ":osfmk_arm64_vmapple_lib",
+        ":pexpert_arm64_vmapple_asm",
+        ":pexpert_arm64_vmapple_lib",
+        ":san_arm64_vmapple_asm",
+        ":san_arm64_vmapple_lib",
+        ":security_arm64_vmapple_asm",
+        ":security_arm64_vmapple_lib",
+    ],
+)
+
+# --- Kernel binary target ---
+
+cc_binary(
+    name = "mach_kernel_raw",
+    linkopts = [
+        "-nostdlib",
+        "-Wl,-static",
+        "-Wl,-e,_start",
+        "-Wl,-pagezero_size,0",
+        "-Wl,-image_base,0xfffffe0007004000",
+    ],
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+    deps = [
+        ":xnu_arm64_vmapple_lib",
+    ],
+)
+
+# --- Transitioned aliases (no --platforms required on CLI) ---
+
+platform_transition_filegroup(
+    name = "xnu_kernel",
+    srcs = [":mach_kernel_raw"],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "xnu_all_lib",
+    srcs = [":xnu_arm64_vmapple_lib"],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "osfmk_arm64_vmapple",
+    srcs = [
+        ":osfmk_arm64_vmapple_asm",
+        ":osfmk_arm64_vmapple_lib",
+    ],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "bsd_arm64_vmapple",
+    srcs = [
+        ":bsd_arm64_vmapple_asm",
+        ":bsd_arm64_vmapple_lib",
+    ],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "pexpert_arm64_vmapple",
+    srcs = [
+        ":pexpert_arm64_vmapple_asm",
+        ":pexpert_arm64_vmapple_lib",
+    ],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "iokit_arm64_vmapple",
+    srcs = [
+        ":iokit_arm64_vmapple_asm",
+        ":iokit_arm64_vmapple_lib",
+    ],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "libkern_arm64_vmapple",
+    srcs = [
+        ":libkern_arm64_vmapple_asm",
+        ":libkern_arm64_vmapple_lib",
+    ],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "libsa_arm64_vmapple",
+    srcs = [
+        ":libsa_arm64_vmapple_asm",
+        ":libsa_arm64_vmapple_lib",
+    ],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "san_arm64_vmapple",
+    srcs = [
+        ":san_arm64_vmapple_asm",
+        ":san_arm64_vmapple_lib",
+    ],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "security_arm64_vmapple",
+    srcs = [
+        ":security_arm64_vmapple_asm",
+        ":security_arm64_vmapple_lib",
+    ],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)
+
+platform_transition_filegroup(
+    name = "assym_osfmk",
+    srcs = [":assym_osfmk_raw"],
+    tags = ["manual"],
+    target_platform = "//platforms:arm64_vmapple",
+)

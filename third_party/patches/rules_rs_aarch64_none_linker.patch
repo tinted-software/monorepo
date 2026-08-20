@@ -1,0 +1,11 @@
+--- a/rs/toolchains/declare_rustc_toolchains.bzl
++++ b/rs/toolchains/declare_rustc_toolchains.bzl
+@@ -134,6 +134,8 @@
+             linker = select({
+                 "@rules_rs//rs/platforms/config:riscv32imac-unknown-none-elf": lld_label,
+                 "@rules_rs//rs/platforms/config:riscv32imc-unknown-none-elf": lld_label,
++                "@rules_rs//rs/platforms/config:aarch64-unknown-none": lld_label,
++                "@rules_rs//rs/platforms/config:aarch64-unknown-none-softfloat": lld_label,
+                 "@platforms//cpu:wasm32": lld_label,
+                 "@platforms//cpu:wasm64": lld_label,
+                 "//conditions:default": None,

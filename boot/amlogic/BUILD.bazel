@@ -1,0 +1,34 @@
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# TODO: make independent of nusb + no_std alloc_io/core_io
+rust_library(
+    name = "amlogic-boot-protocol",
+    srcs = glob([
+        "src/lib.rs",
+        "src/protocol.rs",
+        "src/socid.rs",
+        "src/usb.rs",
+    ]),
+    edition = "2024",
+    deps = [
+        "@crates//:nusb",
+        "@crates//:parking_lot",
+        "@crates//:rootcause",
+    ],
+)
+
+rust_binary(
+    name = "amlogic-boot",
+    srcs = glob(["src/main.rs"]),
+    edition = "2024",
+    deps = [
+        ":amlogic-boot-protocol",
+        "@crates//:clap",
+        "@crates//:nusb",
+        "@crates//:parking_lot",
+        "@crates//:rootcause",
+    ],
+)

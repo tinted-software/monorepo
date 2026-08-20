@@ -1,0 +1,35 @@
+diff -uNr a/rs/private/cargo_workspace_graph.bzl b/rs/private/cargo_workspace_graph.bzl
+--- a/rs/private/cargo_workspace_graph.bzl	2026-08-19 21:58:03.088976594 -0700
++++ b/rs/private/cargo_workspace_graph.bzl	2026-08-19 21:58:03.100198859 -0700
+@@ -556,7 +556,8 @@
+         package_feature_resolutions = feature_resolutions_by_fq_crate[fq_crate(package["name"], package["version"])]
+         if "default" in package.get("features", {}):
+             for triple in platform_triples:
+-                package_feature_resolutions.features_enabled[triple].add("default")
++                if not (triple.startswith("aarch64-unknown-none") or triple.endswith("-none") or triple.endswith("-none-elf")):
++                    package_feature_resolutions.features_enabled[triple].add("default")
+ 
+         fq_deps = workspace_fq_deps.get(package["name"], {})
+ 
+@@ -613,7 +614,8 @@
+             for triple in match_info.matches:
+                 if not is_first_party_dep or materialize_workspace_members:
+                     workspace_dep_labels_by_triple[triple].add(":" + dep_name)
+-                feature_resolutions.features_enabled[triple].update(features)
++                dep_features = [f for f in features if f != "default"] if triple.startswith("aarch64-unknown-none") or triple.endswith("-none") or triple.endswith("-none-elf") else features
++                feature_resolutions.features_enabled[triple].update(dep_features)
+ 
+     for crate, annotation_versions in annotations.items():
+         for version_key, annotation in annotation_versions.items():
+diff -uNr a/rs/private/resolver.bzl b/rs/private/resolver.bzl
+--- a/rs/private/resolver.bzl	2026-08-19 21:58:03.090345368 -0700
++++ b/rs/private/resolver.bzl	2026-08-19 21:58:03.099976500 -0700
+@@ -96,6 +96,8 @@
+ 
+                 dep_features = dep.get("features")
+                 if dep_features:
++                    if triple.startswith("aarch64-unknown-none") or triple.endswith("-none") or triple.endswith("-none-elf"):
++                        dep_features = [feat for feat in dep_features if feat != "default"]
+                     prev_length = len(triple_features)
+                     triple_features.update(dep_features)
+                     if prev_length != len(triple_features):

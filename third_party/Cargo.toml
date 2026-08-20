@@ -1,0 +1,33 @@
+[package]
+name = "rust-third-party"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "dummy"
+path = "dummy.rs"
+
+[dependencies]
+cbindgen = "0.29.4"
+ruffle_core = { git = "https://github.com/ruffle-rs/ruffle" }
+ruffle_render = { git = "https://github.com/ruffle-rs/ruffle", default-features = false, features = ["tessellator"] }
+swf = { git = "https://github.com/ruffle-rs/ruffle" }
+wgpu = { version = "30.0.0", default-features = false, features = ["wgsl", "vulkan", "gles", "metal"] }
+raw-window-handle = { version = "0.6.2", default-features = false }
+url = "2"
+glam = "0.33.5"
+async-channel = "2"
+indexmap = "2"
+winit = "0.31.0-beta.2"
+bytemuck = { version = "1.25.2", features = ["derive"] }
+parking_lot = "0.12.5"
+log = "0.4.33"
+zune-png = { git = "https://github.com/etemesi254/zune-image", default-features = false, features = ["sse", "std"] }
+zune-core = { git = "https://github.com/etemesi254/zune-image", default-features = false, features = [] }
+clap = { version = "4.6.6", features = ["derive"] }
+nusb = "0.2"
+annotate-snippets = "0.12.16"
+winnow = { version = "1.0.4", default-features = false, features = ["simd"] }
+rootcause = "0.13.0"
+aarch64-cpu = "11.2.0"
+spin = "0.12.3"

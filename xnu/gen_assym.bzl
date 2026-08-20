@@ -1,0 +1,104 @@
+# gen_assym: osfmk/conf/Makefile.template genassym.o/assym.s (lines ~493-512)
+# using the target cc_toolchain's compiler_files only (not all_files).
+load("@rules_cc//cc:action_names.bzl", "ACTION_NAMES")
+load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain", "use_cc_toolchain")
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+
+def _gen_assym_impl(ctx):
+    cc_toolchain = find_cc_toolchain(ctx)
+    feature_configuration = cc_common.configure_features(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        requested_features = ctx.features,
+        unsupported_features = ctx.disabled_features,
+    )
+    compiler = cc_common.get_tool_for_action(
+        feature_configuration = feature_configuration,
+        action_name = ACTION_NAMES.c_compile,
+    )
+
+    raw = ctx.actions.declare_file(ctx.label.name + ".raw.s")
+    out = ctx.actions.declare_file(ctx.attr.out)
+
+    hdrs = depset(transitive = [t.files for t in ctx.attr.hdrs])
+    root = ctx.file._root_marker.dirname
+
+    compile_variables = cc_common.create_compile_variables(
+        feature_configuration = feature_configuration,
+        cc_toolchain = cc_toolchain,
+        source_file = ctx.file.src.path,
+        output_file = "assym_dummy.o",
+    )
+    raw_baseline = cc_common.get_memory_inefficient_command_line(
+        feature_configuration = feature_configuration,
+        action_name = ACTION_NAMES.c_compile,
+        variables = compile_variables,
+    )
+
+    baseline = []
+    skip_next = False
+    for flag in raw_baseline:
+        if skip_next:
+            skip_next = False
+            continue
+        if flag in ("-o", "-MF", "-MT", "-MQ", "-c", "assym_dummy.o", ctx.file.src.path):
+            if flag in ("-o", "-MF", "-MT", "-MQ"):
+                skip_next = True
+            continue
+        if flag.startswith("-MF") or flag.startswith("-MD") or flag == "-MD":
+            continue
+        baseline.append(flag)
+
+    args = ctx.actions.args()
+    args.add("-target", ctx.attr._target_triple)
+    args.add_all(baseline)
+    args.add_all(ctx.attr.copts)
+    args.add("-I" + root)
+    for d in ctx.attr.includes:
+        args.add("-I" + root + "/" + d)
+    args.add("-S")
+    args.add("-fno-integrated-as")
+    args.add("-o", raw)
+    args.add(ctx.file.src)
+
+    ctx.actions.run(
+        executable = compiler,
+        arguments = [args],
+        inputs = depset(direct = [ctx.file.src], transitive = [hdrs, cc_toolchain._compiler_files]),
+        outputs = [raw],
+        mnemonic = "GenAssymCompile",
+        use_default_shell_env = True,
+    )
+
+    ctx.actions.run_shell(
+        command = "exec bash $1 $2 $3",
+        arguments = [ctx.file._extract.path, raw.path, out.path],
+        inputs = [raw, ctx.file._extract],
+        outputs = [out],
+        mnemonic = "GenAssymExtract",
+    )
+
+    return [DefaultInfo(files = depset([out]))]
+
+gen_assym = rule(
+    implementation = _gen_assym_impl,
+    attrs = {
+        "src": attr.label(allow_single_file = True, mandatory = True),
+        "hdrs": attr.label_list(allow_files = True),
+        "copts": attr.string_list(),
+        "includes": attr.string_list(),
+        "out": attr.string(mandatory = True),
+        "_extract": attr.label(
+            default = Label("//tools/xnu_config:gen_assym_extract.sh"),
+            allow_single_file = True,
+        ),
+        "_root_marker": attr.label(
+            default = Label("@xnu//:APPLE_LICENSE"),
+            allow_single_file = True,
+        ),
+        "_cc_toolchain": attr.label(default = Label("@rules_cc//cc:current_cc_toolchain")),
+        "_target_triple": attr.string(default = "aarch64-apple-darwin"),
+    },
+    toolchains = use_cc_toolchain(),
+    fragments = ["cpp"],
+)

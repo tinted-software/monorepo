@@ -1,13 +1,21 @@
 [workspace]
-resolver = "3"
-members = ["amlogic-boot"]
+resolver = "2"
+members = ["graphics/angle_wgpu"]
+exclude = ["boot/hv", "third_party"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
 
 [workspace.dependencies]
-anyhow = "1"
-clap = { version = "4", features = ["derive"] }
-nusb = "0.2"
-parking_lot = "0.12"
-annotate-snippets = "0.12"
-winnow = "1.0"
-
-[workspace.lints.clippy]
+bytemuck = { version = "1.25.2", features = ["derive"] }
+cbindgen = "0.29.4"
+glam = "0.33.5"
+log = "0.4.33"
+parking_lot = "0.12.5"
+raw-window-handle = { version = "0.6.2", default-features = false }
+wgpu = { git = "https://github.com/gfx-rs/wgpu", rev = "bbac60da54794f532c890fe985c92616cfc5f2fd", default-features = false, features = ["wgsl", "vulkan", "gles", "metal"] }
+winit = "0.31.0-beta.2"
+zune-core = { git = "https://github.com/etemesi254/zune-image", rev = "fac516c47cf05b07a2625954beecfa354ac14017", default-features = false }
+zune-png = { git = "https://github.com/etemesi254/zune-image", rev = "fac516c47cf05b07a2625954beecfa354ac14017", default-features = false, features = ["sse", "std"] }

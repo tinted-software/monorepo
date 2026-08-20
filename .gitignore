@@ -1,5 +1,10 @@
 .cache/
+.rules_rust_analyzer/
 .DS_Store
 /sdk
 .build/
 target/
+*.pyc
+/bazel-*
+/rust-project.json
+/compile_commands.json
