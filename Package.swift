@@ -28,10 +28,6 @@ let package = Package(
       targets: ["installfile"]
     ),
     .executable(
-      name: "mig",
-      targets: ["mig"]
-    ),
-    .executable(
       name: "replacecontents",
       targets: ["replacecontents"]
     ),
@@ -77,11 +73,6 @@ let package = Package(
       name: "installfile",
       dependencies: [],
       path: "Sources/installfile"
-    ),
-    .executableTarget(
-      name: "mig",
-      dependencies: [],
-      path: "Sources/mig"
     ),
     .executableTarget(
       name: "replacecontents",
