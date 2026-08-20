@@ -3,3 +3,4 @@
 /sdk
 .build/
 target/
+*.pyc
