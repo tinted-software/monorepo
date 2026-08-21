@@ -1,0 +1,28 @@
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_test.bzl", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_binary(
+    name = "android-boot",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2024",
+    deps = [
+        "//lib/android-boot-protocol",
+        "@crates//:base64",
+        "@crates//:clap",
+        "@crates//:getrandom",
+        "@crates//:nusb",
+        "@crates//:num-bigint",
+        "@crates//:rand_core",
+        "@crates//:rootcause",
+        "@crates//:rsa",
+        "@crates//:sha1",
+        "@crates//:zerocopy",
+    ],
+)
+
+rust_test(
+    name = "android-boot-test",
+    crate = ":android-boot",
+)

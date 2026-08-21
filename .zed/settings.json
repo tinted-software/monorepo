@@ -1,0 +1,31 @@
+{
+    "lsp": {
+        "rust-analyzer": {
+            "initialization_options": {
+                "workspace": {
+                    "discoverConfig": {
+                        "command": [
+                            "./.rules_rust_analyzer/discover_bazel_rust_project.exe",
+                            "{arg}",
+                        ],
+                        "progressLabel": "rules_rust",
+                        "filesToWatch": [
+                            "BUILD",
+                            "BUILD.bazel",
+                            "MODULE.bazel",
+                            "WORKSPACE",
+                            "WORKSPACE.bazel",
+                        ],
+                    },
+                },
+                "check": {
+                    "overrideCommand": [
+                        "./.rules_rust_analyzer/flycheck.exe",
+                        "--saved-file",
+                        "$saved_file",
+                    ],
+                },
+            },
+        },
+    },
+}

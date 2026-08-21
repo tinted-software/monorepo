@@ -1,0 +1,15 @@
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rs//rs:rust_test.bzl", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "android-boot-protocol",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2024",
+)
+
+rust_test(
+    name = "android-boot-protocol-test",
+    crate = ":android-boot-protocol",
+)

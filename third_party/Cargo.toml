@@ -30,4 +30,13 @@ annotate-snippets = "0.12.16"
 winnow = { version = "1.0.4", default-features = false, features = ["simd"] }
 rootcause = "0.13.0"
 aarch64-cpu = "11.2.0"
+arm-gic = "0.9.0"
+arm-psci = "0.1.2"
 spin = "0.12.3"
+rsa = "0.10.0-rc.18"
+base64 = "0.23.1"
+sha1 = { version = "0.11.0", default-features = false, features = ["oid"] }
+getrandom = "0.3.4"
+rand_core = "0.10.1"
+num-bigint = "0.4.8"
+zerocopy = { version = "0.8.56", default-features = false, features = ["derive"] }

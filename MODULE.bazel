@@ -104,6 +104,12 @@ osx.frameworks(
 )
 
 rules_rust = use_extension("@rules_rs//rs:rules_rust.bzl", "rules_rust")
+rules_rust.patch(
+    patches = [
+        "//third_party:patches/rules_rust_flycheck_src_relpath.patch",
+    ],
+    strip = 1,
+)
 use_repo(rules_rust, "rules_rust")
 
 xnu = use_extension("//extensions:xnu.bzl", "xnu")
@@ -112,7 +118,7 @@ use_repo(xnu, "xnu")
 qemu = use_extension("@rules_qemu//qemu/extension:qemu.bzl", "qemu")
 qemu.system_toolchain(
     system_target = "aarch64-softmmu",
-    target_settings = ["//boot/hv:qemu_system_target_aarch64"],
+    target_settings = ["//boot:qemu_system_target_aarch64"],
 )
 use_repo(
     qemu,

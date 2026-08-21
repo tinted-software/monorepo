@@ -1,0 +1,18 @@
+load(":boards.bzl", "BOARDS")
+load(":hv_target.bzl", "hv_targets")
+
+package(default_visibility = ["//visibility:public"])
+
+config_setting(
+    name = "qemu_system_target_aarch64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# One board() entry in boards.bzl == one lib/binary/transition trio (+
+# runner, where applicable). Porting to a new board (gs201, ...) means
+# adding an entry there and a linker script, not touching this file.
+hv_targets(BOARDS)

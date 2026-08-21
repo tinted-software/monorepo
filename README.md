@@ -10,7 +10,8 @@ You will need Bazel >=9.2.0 installed and a modern OpenJDK distribution >=26.
 
 To generate the rust-project.json for rust-analyzer:
 
-`bazel run @rules_rust//tools/rust_analyzer:gen_rust_project`
+- `bazel run @rules_rust//tools/rust_analyzer:setup print`
+- `bazel run @rules_rust//tools/rust_analyzer:gen_rust_project`
 
 To generate the compile_commands.json for clangd:
 

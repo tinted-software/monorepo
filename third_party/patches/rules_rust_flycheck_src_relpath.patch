@@ -1,0 +1,23 @@
+--- a/tools/rust_analyzer/bin/flycheck.rs	2026-08-17 14:09:36
++++ b/tools/rust_analyzer/bin/flycheck.rs	2026-08-20 19:30:51
+@@ -471,11 +471,15 @@
+     let package = find_owning_package(workspace, file_rel).with_context(|| {
+         format!("no BUILD.bazel found above {saved_file} — is this file part of a Bazel target?")
+     })?;
+-    let file_basename = file_rel
+-        .file_name()
+-        .with_context(|| format!("saved file {saved_file} has no file name"))?;
+-    let pattern = format!("//{package}:{file_basename}");
+-    let query = format!("attr(srcs, {pattern:?}, //{package}:*)");
++    let file_in_pkg = file_rel
++        .strip_prefix(&package)
++        .with_context(|| format!("stripping package {package} from {file_rel}"))?;
++    let (pattern, pkg_target) = if package.as_str().is_empty() {
++        (format!("//:{file_in_pkg}"), "//:*".to_string())
++    } else {
++        (format!("//{package}:{file_in_pkg}"), format!("//{package}:*"))
++    };
++    let query = format!("attr(srcs, {pattern:?}, {pkg_target})");
+     let output = Command::new(bazel.as_str())
+         .current_dir(workspace)
+         .arg("query")

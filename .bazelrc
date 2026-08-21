@@ -1,4 +1,4 @@
-startup --host_jvm_args=-XX:+UseZGC
+startup:zgc --host_jvm_args=-XX:+UseZGC
 
 common --enable_platform_specific_config
 
